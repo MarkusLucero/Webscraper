@@ -8,7 +8,6 @@ from lxml import html
 from concurrent.futures import ThreadPoolExecutor
 import timeit
 
-
 def get_data(url):
     
     with closing(get(url, stream=True)) as response:
@@ -17,8 +16,8 @@ def get_data(url):
         else:
             return None
 
-def fetch_html(urls) -> List[str]:
-    with ThreadPoolExecutor(max_workers = 2) as executor:
+def fetch_html(urls, workers) -> List[str]:
+    with ThreadPoolExecutor(max_workers = workers) as executor:
         res = executor.map(get_data, urls)
     return list(res)
 
@@ -47,16 +46,10 @@ def create_directory() -> None:
 def main():
     urls = ['https://www.elgiganten.se/cms/sommarrea/sommarrea/',
             'https://www.elgiganten.se/cms/sommarrea/sommarrea/']
-    start = timeit.default_timer()
-    response_list = fetch_html(urls)
+    response_list = fetch_html(urls,5)
     create_directory()
-
     parse_response(response_list[0],"elgiganten_cheap","span","table-cell")
     parse_response(response_list[1],"elgiganten_price","div","product-price")
-
-
-    stop = timeit.default_timer()
-    print('Time: ', stop - start)
 
 
 if __name__ == "__main__":
