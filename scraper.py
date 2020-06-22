@@ -1,5 +1,5 @@
 from requests import get
-from typing import Dict
+from typing import Dict, List
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
@@ -9,25 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 import timeit
 
 
-def url_list(urls) -> Dict[int, str]:
-    keys = range(len(urls))
-    return dict(zip(keys, urls))
-
-
-def get_data(urls) -> Dict[int, str]:
-    response_list = {}
-    for key, url in urls.items():
-        try:
-            with closing(get(url, stream=True)) as response:
-                if validated_response(response):
-                    response_list[key] = response.content
-                else:
-                    return None
-        except RequestException as e:
-            return None
-    return response_list
-
-def get_data2(url):
+def get_data(url):
     
     with closing(get(url, stream=True)) as response:
         if validated_response(response):
@@ -35,9 +17,9 @@ def get_data2(url):
         else:
             return None
 
-def fetch(urls):
+def fetch_html(urls) -> List[str]:
     with ThreadPoolExecutor(max_workers = 2) as executor:
-        res = executor.map(get_data2, urls)
+        res = executor.map(get_data, urls)
     return list(res)
 
 def validated_response(response) -> bool:
@@ -64,14 +46,13 @@ def create_directory() -> None:
 
 def main():
     urls = ['https://www.elgiganten.se/cms/sommarrea/sommarrea/',
-                     'https://www.elgiganten.se/cms/sommarrea/sommarrea/']
+            'https://www.elgiganten.se/cms/sommarrea/sommarrea/']
     start = timeit.default_timer()
-    response_list = fetch(urls)
+    response_list = fetch_html(urls)
     create_directory()
 
     parse_response(response_list[0],"elgiganten_cheap","span","table-cell")
     parse_response(response_list[1],"elgiganten_price","div","product-price")
-
 
 
     stop = timeit.default_timer()
